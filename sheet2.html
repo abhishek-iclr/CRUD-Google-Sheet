@@ -1,0 +1,500 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Sheet 1</title>
+<link href="css/bootstrap-reboot.css" rel="stylesheet" />
+<link href="css/bootstrap.min.css" rel="stylesheet" />
+<style>
+#datatable tbody > tr:first-child td, #datatable tbody > tr:first-child th {
+    font-weight: bold;
+    background: #d1ecf1;
+    font-size: .85em;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+table {
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+}
+table caption {
+    font-size: 1.5em;
+    margin: .5em 0 .75em;
+}
+table tr {
+    border: 1px solid #ddd;
+    padding: .35em;
+}
+table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+table th, table td {
+    padding: .625em;
+    text-align: left;
+}
+table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.table-overflow {
+    height: 500px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+</style>
+</head>
+
+<body>
+<script  data-cfasync="false" src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+   
+<div class="container mt-5 mb-5">
+  <h3>Create Records</h3>
+  <form id="formCreate" class="row" >
+    <div class="form-group col-6">
+      <label>Phone</label>
+      <input class="form-control" name="phone" type="text" >
+    </div>
+    <div class="form-group col-6">
+      <label>Address</label>
+      <input class="form-control" name="address" type="text" >
+    </div>
+    <div class="col-12">
+      <input type="hidden" name="action" value="create_1">
+      <!--               <input type="hidden" name="SHEET_NAME" value="Sheet1">-->
+      <p id="result"></p>
+      <input type="submit" value="Submit Data" class="btn btn-primary" />
+    </div>
+  </form>
+  <hr/>
+</div>
+<div class="container mt-5 mb-5">
+  <form id="formRetrieve" >
+    <h3>Retrieve Records</h3>
+    <div class="form-group">
+      <input type="hidden" name="action" value="retrieve_1">
+      <input class="btn btn-warning" id="btnRetrieve" type="submit" value="Retrieve" />
+    </div>
+    <div class="row">
+      <div class="form-group col-3">
+        <input class="form-control" id="myInput" type="text" placeholder="Search..">
+      </div>
+    </div>
+  </form>
+</div>
+<div class="table-overflow">
+  <div class="table-responsive">
+    <table id="datatable" class="table table-hover">
+    </table>
+  </div>
+</div>
+<div id="messageRetrieve"></div>
+<div class="container mt-5 mb-5">
+  <hr class="mb-5"/>
+  <form id="formUpdate" >
+    <h3>Update Record</h3>
+    <div class="row">
+      <div class="form-group col-6">
+        <label>TID</label>
+        <input class="form-control" name="tid" type="text" id="tid">
+      </div>    
+      <div class="form-group col-6">
+        <label>Phone</label>
+        <input class="form-control" name="phone" type="text" id="phone">
+      </div>
+      <div class="form-group col-6">
+        <label>Address</label>
+        <input class="form-control" name="address" type="text" id="address" >
+      </div>
+        
+      <div class="form-group col-12">
+        <input type="hidden" name="action" value="update_1">
+        <input class="btn btn-success" type="submit" value="Update" />
+        <p id="messageUpdate"></p>
+      </div>
+    </div>
+  </form>
+  <hr class="mb-5"/>
+  <form id="formDelete" >
+    <h3>Delete Record</h3>
+    <div class="row">
+      <div class="form-group col-6">
+        <label>TID</label>
+        <input class="form-control" name="tid" type="text" id="dtid" disabled="true">
+      </div>
+      <div class="form-group col-6">
+        <label>Phone</label>
+        <input class="form-control" name="phone" type="text" id="dphone" disabled="true">
+      </div>
+      <div class="form-group col-6">
+        <label>Address</label>
+        <input class="form-control" name="address" type="text" id="daddresss" disabled="true">
+      </div>
+        
+      <div class="form-group col-12">
+        <input type="hidden" name="action" value="delete_1">
+        <input class="btn btn-danger" type="submit" value="Delete" />
+        <p id="messageDelete"></p>
+      </div>
+    </div>
+  </form>
+</div>
+<script>
+        $(window).load(function () {
+            $("#btnRetrieve").click();
+        })
+        
+        jQuery( document ).ready(function( $ ) {    
+        
+            
+        //CUSTOME SEARCH
+        $("#myInput").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("#datatable tr").filter(function() {
+              $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+          });
+        //CUSTOM SEARCH ENDS
+        
+        
+            
+        // variable to hold request
+        var request;
+        // bind to the submit event of our form
+           $("#formCreate").submit(function(event){
+       // abort any pending request
+       if (request) {
+           request.abort();
+       }
+       // setup some local variables
+       var $form = $(this);
+       // let's select and cache all the fields
+       var $inputs = $form.find("input, select, button, textarea");
+       // serialize the data in the form
+       var serializedData = $form.serialize();
+ 
+       // let's disable the inputs for the duration of the ajax request
+       // Note: we disable elements AFTER the form data has been serialized.
+       // Disabled form elements will not be serialized.
+       $inputs.prop("disabled", true);
+       $('#result').text('Sending data...');
+               
+               
+ 
+       // fire off the request to /form.php
+       request = $.ajax({
+           url: "https://script.google.com/macros/s/AKfycbxIHBXdtUEuiN4T0ortcwt2YXWWl60y6IlqnyPpGIqXmlvJRQ6b/exec",
+           type: "post",
+           data: serializedData
+       });
+ 
+       // callback handler that will be called on success
+       request.done(function (response, textStatus, jqXHR){
+           // log a message to the console
+           $('#result').html('<a href="https://docs.google.com/spreadsheets/d/18wg3b-rBhTBFvr-bBmyviwAUBVXqsEPfYQzulSSloBs/edit#gid=0" target="_blank">Success - see Google Sheet</a>');
+     console.log("Created.");
+     //console.log(response);
+     //console.log(textStatus);
+     //console.log(jqXHR);
+     resetForm();
+     $("#btnRetrieve").click();
+       });
+ 
+       // callback handler that will be called on failure
+       request.fail(function (jqXHR, textStatus, errorThrown){
+           // log the error to the console
+           console.error(
+               "The following error occured: "+
+               textStatus, errorThrown
+           );
+       });
+ 
+       // callback handler that will be called regardless
+       // if the request failed or succeeded
+       request.always(function () {
+           // reenable the inputs
+           $inputs.prop("disabled", false);
+       });
+ 
+       // prevent default posting of form
+       event.preventDefault();
+   });
+
+
+           $("#formRetrieve").submit(function(event){
+               // abort any pending request
+               if (request) {
+                   request.abort();
+               }
+               // setup some local variables
+               var $form = $(this);
+               // let's select and cache all the fields
+               var $inputs = $form.find("input, select, button, textarea");
+               // serialize the data in the form
+               var serializedData = $form.serialize();
+
+               // let's disable the inputs for the duration of the ajax request
+               // Note: we disable elements AFTER the form data has been serialized.
+               // Disabled form elements will not be serialized.
+               $inputs.prop("disabled", true);
+               resetForm();
+               $('#messageRetrieve').text('Requesting data...');
+                        $('#datatable').text("");
+
+
+               // fire off the request to /form.php
+               request = $.ajax({
+                   url: "https://script.google.com/macros/s/AKfycbxIHBXdtUEuiN4T0ortcwt2YXWWl60y6IlqnyPpGIqXmlvJRQ6b/exec",
+                   type: "post",
+                   data: serializedData
+               });
+
+               // callback handler that will be called on success
+               request.done(function (response, textStatus, jqXHR){
+                   // log a message to the console
+                   $('#result').html('<a href="https://docs.google.com/spreadsheets/d/18wg3b-rBhTBFvr-bBmyviwAUBVXqsEPfYQzulSSloBs/edit#gid=0" target="_blank">Success - see Google Sheet</a>');
+             console.log("Retrieved.");
+             //console.log(response);
+             //console.log(textStatus);
+             //console.log(jqXHR);
+             var data = response.values;
+             //console.log(data);    
+
+                          var trHTML ="";
+
+           $.each(data, function (i, item) {
+             var tdHTML="";  
+             //prepare first two columns
+             if (i==0){
+               tdHTML= "<td>Delete</td><td>Edit</td>" + tdHTML;
+               tdHTML=tdHTML.replace(/td>/gi,"th>");
+             }else{
+               tdHTML+= "<td><button onclick='recordDelete(this)' >delete</button></td>";
+               tdHTML+= "<td><button onclick='recordEdit(this)' >edit</button></td>";
+             }
+             //prepare remaining columns
+             for (j = 0; j < item.length; j++) {
+               tdHTML += "<td>" + item[j] + "</td>";
+             }
+             trHTML += "<tr>" + tdHTML + "</tr>";
+           }); //end each records
+
+           //append records to table element
+           $('#datatable').append(trHTML);
+           //reset
+           $('#messageRetrieve').text('');
+        $('#messageRetrieve')[0].scrollIntoView(false);
+               });
+
+               // callback handler that will be called on failure
+               request.fail(function (jqXHR, textStatus, errorThrown){
+                   // log the error to the console
+                   console.error(
+                       "The following error occured: "+
+                       textStatus, errorThrown
+                   );
+               });
+
+               // callback handler that will be called regardless
+               // if the request failed or succeeded
+               request.always(function () {
+                   // reenable the inputs
+                   $inputs.prop("disabled", false);
+               });
+
+               // prevent default posting of form
+               event.preventDefault();
+   });
+
+    $("#formUpdate").submit(function(event){ 
+           // abort any pending request
+           if (request) {
+               request.abort();
+           }
+           // setup some local variables
+           var $form = $(this);
+           // let's select and cache all the fields
+           var $inputs = $form.find("input, select, button, textarea");
+           // serialize the data in the form
+           var serializedData = $form.serialize();
+        
+           // let's disable the inputs for the duration of the ajax request
+           // Note: we disable elements AFTER the form data has been serialized.
+           // Disabled form elements will not be serialized.
+           $inputs.prop("disabled", true);
+           resetForm();
+           $('#messageUpdate').text('Updating data...');
+
+
+           // fire off the request to /form.php
+//           request = $.ajax({
+//               url: "https://script.google.com/macros/s/AKfycbxIHBXdtUEuiN4T0ortcwt2YXWWl60y6IlqnyPpGIqXmlvJRQ6b/exec",
+//               type: "post",
+//               data: serializedData
+//           });
+           request = $.ajax({
+               url: "https://script.google.com/macros/s/AKfycbxIHBXdtUEuiN4T0ortcwt2YXWWl60y6IlqnyPpGIqXmlvJRQ6b/exec",
+               type: "post",
+               data: serializedData,
+           });
+        
+
+ 
+            // callback handler that will be called on success
+            request.done(function (response, textStatus, jqXHR){
+           // log a message to the console
+           $('#result').html('<a href="https://docs.google.com/spreadsheets/d/18wg3b-rBhTBFvr-bBmyviwAUBVXqsEPfYQzulSSloBs/edit#gid=0" target="_blank">Success - see Google Sheet</a>');
+             console.log("Updated.");
+             //console.log(response);
+             //console.log(textStatus);
+             //console.log(jqXHR);
+             resetForm();
+             $('#messageUpdate').text('');
+             $("#btnRetrieve").click();
+
+               });
+
+ 
+           // callback handler that will be called on failure
+           request.fail(function (jqXHR, textStatus, errorThrown){
+               // log the error to the console
+               console.error(
+                   "The following error occured: "+
+                   textStatus, errorThrown
+               );
+           }); 
+
+
+           // callback handler that will be called regardless
+           // if the request failed or succeeded
+           request.always(function () {
+               // reenable the inputs
+               $inputs.prop("disabled", false);
+           });  
+            
+           // prevent default posting of form
+           event.preventDefault();   
+                
+   });
+
+
+            
+            
+    $("#formDelete").submit(function(event){
+               
+               
+               
+       // abort any pending request
+       if (request) {
+           request.abort();
+       }
+       // setup some local variables
+       var $form = $(this);
+       // let's select and cache all the fields
+       var $inputs = $form.find("input, select, button, textarea");
+       // serialize the data in the form
+       var serializedData = $form.serialize();
+
+       // let's disable the inputs for the duration of the ajax request
+       // Note: we disable elements AFTER the form data has been serialized.
+       // Disabled form elements will not be serialized.
+       $inputs.prop("disabled", true);
+       resetForm();
+       $('#messageDelete').text('Deleting data...');
+ 
+       // fire off the request to /form.php
+       request = $.ajax({
+           url: "https://script.google.com/macros/s/AKfycbxIHBXdtUEuiN4T0ortcwt2YXWWl60y6IlqnyPpGIqXmlvJRQ6b/exec",
+           type: "post",
+           data: serializedData
+       });
+ 
+       // callback handler that will be called on success
+       request.done(function (response, textStatus, jqXHR){
+           // log a message to the console
+           $('#result').html('<a href="https://docs.google.com/spreadsheets/d/18wg3b-rBhTBFvr-bBmyviwAUBVXqsEPfYQzulSSloBs/edit#gid=0" target="_blank">Success - see Google Sheet</a>');
+            //     console.log("Deleted.");
+                 console.log(response);
+            //     console.log(textStatus);
+            //     console.log(jqXHR);
+                 resetForm();
+                 $('#messageDelete').text('');
+                 $("#btnRetrieve").click();
+       });
+ 
+       // callback handler that will be called on failure
+       request.fail(function (jqXHR, textStatus, errorThrown){
+           // log the error to the console
+           console.error(
+               "The following error occured: "+
+               textStatus, errorThrown
+           );
+       });
+ 
+       // callback handler that will be called regardless
+       // if the request failed or succeeded
+       request.always(function () {
+           // reenable the inputs
+           $inputs.prop("disabled", false);
+       });
+ 
+       // prevent default posting of form
+       event.preventDefault();
+   });
+
+
+ });
+
+        function recordEdit(param) {
+            resetForm();
+            var arrRecord=[];
+            $(param).closest('tr').find('td').not(':first').each(function() {
+                   //var textval = $(this).text();
+                    arrRecord.push( $(this).text());
+              });
+                $("#formUpdate #tid").val(arrRecord[1]);
+                $("#formUpdate #phone").val(arrRecord[2]);
+                $("#formUpdate #address").val(arrRecord[3]);
+
+             //window.location.hash = '#formUpdate';
+                   // var formUpdate = document.getElementById ("formUpdate");
+                   //formUpdate.scrollIntoView(true);
+                   $('#formUpdate')[0].scrollIntoView();
+               //alert(address.join('\n'));
+        };
+
+        function recordDelete(param) {
+        resetForm();
+        var arrRecord=[];
+        $(param).closest('tr').find('td').not(':first').each(function() {
+               //var textval = $(this).text();
+              arrRecord.push( $(this).text());
+          });
+            $("#formDelete #dtid").val(arrRecord[1]);
+            $("#formDelete #dphone").val(arrRecord[2]);
+            $("#formDelete #daddresss").val(arrRecord[3]);
+         //window.location.hash = '#formUpdate';
+               // var formUpdate = document.getElementById ("formUpdate");
+               //formUpdate.scrollIntoView(true);
+               $('#formDelete')[0].scrollIntoView();
+           //alert(address.join('\n'));
+        };
+
+        function resetForm(){
+           $('#formCreate')[0].reset();
+           $('#formUpdate')[0].reset();
+           $("#formUpdate tid").prop("disabled", true);
+           $('#formDelete')[0].reset();
+           $("#formDelete dtid").prop("disabled", true);     
+           $("#formUpdate dphone").prop("disabled", true);
+        }
+        
+        
+        
+        
+
+    </script>
+</body>
+</html>
